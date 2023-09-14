@@ -1,0 +1,15 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - npm install webpack webpack-cli babel-loader @babel/preset-env
+  build:
+    commands:
+      - npx webpack --config webpack.config.js
+artifacts:
+  files:
+    - 'dist/**/*'
+  discard-paths: yes

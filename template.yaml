@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Serverless application to persist data to DynamoDB
+
+Resources:
+  MyDynamoDBTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName: MyTable
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  MyLambdaFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      CodeUri: ./test-app/src
+      Handler: app.handler
+      Runtime: nodejs18.x
+      MemorySize: 128
+      Timeout: 10
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref MyDynamoDBTable
+      Events:
+        ApiGatewayEvent:
+          Type: Api
+          Properties:
+            Path: /persist
+            Method: post
+
+  MyApiGateway:
+    Type: 'AWS::Serverless::Api'
+    Properties:
+      StageName: dev
+
+Outputs:
+  LambdaFunctionArn:
+    Description: "Lambda Function ARN"
+    Value: !GetAtt MyLambdaFunction.Arn
+  DynamoDBTableName:
+    Description: "DynamoDB Table Name"
+    Value: !Ref MyDynamoDBTable
+  ApiGatewayEndpoint:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${MyApiGateway}.execute-api.${AWS::Region}.amazonaws.com/dev/persist"
